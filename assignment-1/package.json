@@ -1,0 +1,11 @@
+{
+  "name": "assignment1_express_router",
+  "version": "1.0.0",
+  "description": "A node server using express router to implement all requirements for assignment 1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Orfeas Kalipolitis",
+  "license": "ISC"
+}
