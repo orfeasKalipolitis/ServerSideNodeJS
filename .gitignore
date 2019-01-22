@@ -1,3 +1,4 @@
 node-express/node_modules
 assignment-1/node_modules
 express-generator/conFusionServer/node_modules
+*package-lock.json*
