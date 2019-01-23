@@ -1,36 +1,37 @@
 const MongoClient = require('mongodb').MongoClient;
-const assert = require('assert');
 
 const dbOper = require('./operations');
 
 const url = 'mongodb://localhost:27017';
 const dbName = 'conFusion';
 
-MongoClient.connect(url, (err, client) => {
-    assert.equal(err, null);
-    
-    console.log('Connected correctly to server.');
+MongoClient.connect(url)
+    .then((client) => {
+        console.log('Connected correctly to server.');
 
-    const db = client.db(dbName);
-    
-    dbOper.insertDocuments(db, [{name: "honey glazed donut", description: "just a donut duuuude"}, {name:"test", description: "test"}], 'dishes', (result) => {
-        console.log('Inserted doc:\n', result.ops);
+        const db = client.db(dbName);
 
-        dbOper.findAllDocuments(db, 'dishes', (docs) => {
+        dbOper.insertDocuments(db, [{name: "honey glazed donut", description: "just a donut duuuude"}, {name:"test", description: "test"}], 'dishes')
+        .then((result) => {
+            console.log('Inserted doc:\n', result.ops);
+
+            return dbOper.findAllDocuments(db, 'dishes');
+        }).then((docs) => {
             console.log('Found Documents:\n', docs);
 
-            dbOper.updateDocument(db, {name: 'honey glazed donut'}, {description: 'a new description'}, 'dishes', (result) => {
+            return dbOper.updateDocument(db, {name: 'honey glazed donut'}, {description: 'a new description'}, 'dishes');
+        }).then((result) => {
                 console.log('Updated document:\n', result.result);
 
-                dbOper.findAllDocuments(db, 'dishes', (docs) => {
-                    console.log('Found Documents:\n', docs);
+                return dbOper.findAllDocuments(db, 'dishes');
+        }).then((docs) => {
+            console.log('Found Documents:\n', docs);
 
-                    db.dropCollection('dishes', (result) => {
-                        console.log(result);
-                        client.close();
-                    });
-                });                        
-            });
-        });
-    });
-});
+            return db.dropCollection('dishes');
+        }).then((result) => {
+            console.log(result);
+            client.close();
+        })
+        .catch(err => console.log(err));
+    })
+    .catch(err => console.log(err));
