@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+//  import model
 const Dishes = require('../models/dishes');
 
 //  initialize router
