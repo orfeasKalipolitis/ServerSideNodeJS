@@ -2,6 +2,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+//  import model
+const Leaders = require('../models/leaders');
+
 //  initialize router
 const leaderRouter = express.Router();
 
@@ -14,33 +17,37 @@ leaderRouter.route('/')
     //  for all requests
     .all((req, res, next) => {
         res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Type', 'application/json');
         next();
     })
 
     //  get implementation
     .get((req, res, next) => {
-        res.end('Will send all of leaders details!');
+        Leaders.find({})
+        .then(leaders => res.json(leaders))
+        .catch(err => console.log(err));
     })
-    
+
     //  post implementation
     .post((req, res, next) => {
-        res.end('Will create leader with name: ' + req.body.name +
-        ' and description: ' + req.body.description);
+        Leaders.create(req.body)
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     })
-    
+
     //  put implementation
     .put((req, res, next) => {
-        res.end('Will update leader with new name: ' + req.body.name +
-        ' and description: ' + req.body.description);
+        res.statusCode = 403;
+        res.end('PUT operation not permitted on /leaders/');
     })
-    
-    //  delete implementation
+
     .delete((req, res, next) => {
-        res.end('Will delete all the leaders!');
+        Leaders.remove({})
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     });
 
-//  route with parameter promoId
+//  route with parameter leaderId
 leaderRouter.route('/:leaderId')
     //  for all requests
     .all((req, res, next) => {
@@ -51,24 +58,30 @@ leaderRouter.route('/:leaderId')
 
     //  get implementation
     .get((req, res, next) => {
-        res.end('Will send details about leader: ' + req.params.leaderId);
+        Leaders.findById(req.params.leaderId)
+        .then(leader => res.json(leader))
+        .catch(err => console.log(err));
     })
-    
+
     //  post implementation
     .post((req, res, next) => {
-        res.end('Will create leader: ' + req.params.leaderId + 
-        ' with name: ' + req.body.name + ' and description: ' + req.body.description);
+        res.statusCode = 403;
+        res.end('POST not supported on /leaders/' + req.params.leaderId);
     })
-    
+
     //  put implementation
     .put((req, res, next) => {
-        res.end('Will update leader: ' + req.params.leaderId +  
-        ' with new name: ' + req.body.name + ' and description: ' + req.body.description);
+        Leaders.findByIdAndUpdate(req.params.leaderId, {
+            $set: req.body
+        }, {new: true})
+        .then(leader => res.json(leader))
+        .catch(err => console.log(err));
     })
-    
-    //  delete implementation
+
     .delete((req, res, next) => {
-        res.end('Will delete leader ' + req.params.leaderId + '!');
+        Leaders.findByIdAndRemove(req.params.leaderId)
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     });
 
 //  export router
