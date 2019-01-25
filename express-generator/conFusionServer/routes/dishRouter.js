@@ -2,6 +2,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const Dish = require('../models/dishes');
+
 //  initialize router
 const dishRouter = express.Router();
 
@@ -14,28 +16,34 @@ dishRouter.route('/')
     //  for all requests
     .all((req, res, next) => {
         res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Type', 'application/json');
         next();
     })
 
     //  get implementation
     .get((req, res, next) => {
-        res.end('Will send you details about all the dishes!');
+        Dish.find({})
+        .then(dishes => res.json(dishes))
+        .catch(err => console.log(err));
     })
 
     //  post implementation
     .post((req, res, next) => {
-        res.end('Will add the dish: ' + req.body.name + ' with details: ' + req.body.description);
+        Dish.create(req.body)
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     })
 
     //  put implementation
     .put((req, res, next) => {
-        res.end('Updating the dish with new name: ' + req.body.name + 
-        ' and new details: ' + req.body.description);
+        res.statusCode = 403;
+        res.end('PUT operation not permitted on /dishes/');
     })
 
     .delete((req, res, next) => {
-        res.end('Deleting all the dishes!');
+        Dish.remove({})
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     });
 
 //  route with parameter dishId
@@ -49,23 +57,29 @@ dishRouter.route('/:dishId')
 
     //  get implementation
     .get((req, res, next) => {
-        res.end('Will send details of dish: ' + req.params.dishId);
+        Dish.findById(req.params.dishId)
+        .then(dish => res.json(dish))
+        .catch(err => console.log(err));
     })
 
     //  post implementation
     .post((req, res, next) => {
-        res.end('Will add dish: ' +req.params.dishId + ' with name: ' + req.body.name + 
-        ' and details: ' + req.body.description);
+        res.end('POST not supported on /dishes/' + req.params.dishId);
     })
 
     //  put implementation
     .put((req, res, next) => {
-        res.end('Updating the dish: ' + req.params.dishId + ' with new name: ' + req.body.name + 
-        ' and new details: ' + req.body.description);
+        Dish.findByIdAndUpdate(req.params.dishId, {
+            $set: req.body
+        }, {new: true})
+        .then(dish => res.json(dish))
+        .catch(err => console.log(err));
     })
 
     .delete((req, res, next) => {
-        res.end('Deleting dish: ' + req.params.dishId + '!');
+        Dish.findByIdAndRemove(req.params.dishId)
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     });
 
 //  export router

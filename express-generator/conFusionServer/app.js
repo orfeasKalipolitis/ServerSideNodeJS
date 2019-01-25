@@ -1,13 +1,26 @@
+//  import modules for logging
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+//  import modules
+const mongoose = require('mongoose');
+
+//  connect to mongoDB server
+const url = 'mongodb://localhost:27017/conFusion';
+const connect = mongoose.connect(url);
+
+connect.then((db) => {
+    console.log('Successfully connected to conFusion mongoDB server.');
+}).catch(err => console.log(err));
+
+//  import default routers
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
-//  import routers
+//  import custom routers
 const dishRouter = require('./routes/dishRouter');
 const promoRouter = require('./routes/promoRouter');
 const leaderRouter = require('./routes/leaderRouter');
