@@ -34,7 +34,11 @@ dishRouter.route('/')
     .post(authenticate.verifyUser, (req, res, next) => {
         Dishes.create(req.body)
         .then(resp => res.json(resp))
-        .catch(err => console.log(err));
+        .catch(err => {
+            res.statusCode = 400;
+            res.json(err);
+            console.log(err);
+        });
     })
 
     //  put implementation
