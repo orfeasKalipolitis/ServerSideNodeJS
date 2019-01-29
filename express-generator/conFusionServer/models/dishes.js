@@ -4,22 +4,24 @@ const Schema = mongoose.Schema;
 require('mongoose-currency').loadType(mongoose);
 const Currency = mongoose.Types.Currency;
 
-const commentSchema = new Schema({
-    rating: {
+var commentSchema = new Schema({
+    rating:  {
         type: Number,
-        required: true,
         min: 1,
-        max: 5
+        max: 5,
+        required: true
     },
-    comment: {
+    comment:  {
         type: String,
         required: true
     },
     author: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }
-}, {timestamps: true});
+}, {
+    timestamps: true
+});
 
 const dishSchema = new Schema({
     name: {
@@ -42,11 +44,6 @@ const dishSchema = new Schema({
     label: {
         type: String,
         default: ''
-    },
-    price: {
-        type: Currency,
-        required: true,
-        min: 0
     },
     featured: {
         type: Boolean,
