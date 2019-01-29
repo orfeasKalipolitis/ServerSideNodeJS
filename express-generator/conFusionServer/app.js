@@ -2,13 +2,10 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 //  import modules
 const mongoose = require('mongoose');
-var session = require('express-session');
-var FileStore = require('session-file-store')(session);
 var passport = require('passport');
 
 //  import local modules
@@ -17,7 +14,7 @@ var authenticate = require('./authenticate');
 
 //  connect to mongoDB server
 const url = config.mongoUrl;
-const connect = mongoose.connect(url, { useNewUrlParser: true });
+const connect = mongoose.connect(url);
 
 connect.then((db) => {
     console.log('Successfully connected to conFusion mongoDB server.');
