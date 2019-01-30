@@ -2,8 +2,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+//  import custom modules
+var authenticate = require('../authenticate');
+
 //  initialize router
 const promoRouter = express.Router();
+
+//  import models
+const Promos = require('../models/promotions');
 
 //  use body parser module
 promoRouter.use(bodyParser.json());
@@ -20,24 +26,32 @@ promoRouter.route('/')
 
     //  get implementation
     .get((req, res, next) => {
-        res.end('Will send details about all the promotions!');
+        Promos.find({})
+        .then(promos => res.json(promos))
+        .catch(err => console.log(err));
     })
-    
+
     //  post implementation
-    .post((req, res, next) => {
-        res.end('Will create promotion with name: ' + req.body.name +
-        ' and description: ' + req.body.description);
+    .post(authenticate.verifyUser,  authenticate.verifyAdmin, (req, res, next) => {
+        Promos.create(req.body)
+        .then(resp => res.json(resp))
+        .catch(err => {
+            res.statusCode = 400;
+            res.json(err);
+            console.log(err);
+        });
     })
-    
+
     //  put implementation
-    .put((req, res, next) => {
-        res.end('Will update promotions with new name: ' + req.body.name +
-        ' and description: ' + req.body.description);
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        res.statusCode = 403;
+        res.end('PUT operation not permitted on /promotion/');
     })
-    
-    //  delete implementation
-    .delete((req, res, next) => {
-        res.end('Will delete all promotions!');
+
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promos.remove({})
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     });
 
 //  route with parameter promoId
@@ -51,24 +65,29 @@ promoRouter.route('/:promoId')
 
     //  get implementation
     .get((req, res, next) => {
-        res.end('Will send details about promotion: ' + req.params.promoId);
+        Promos.findById(req.params.promoId)
+        .then(promo => res.json(promo))
+        .catch(err => console.log(err));
     })
-    
+
     //  post implementation
-    .post((req, res, next) => {
-        res.end('Will create promotion: ' + req.params.promoId + 
-        ' with name: ' + req.body.name + ' and description: ' + req.body.description);
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        res.end('POST not supported on /promos/' + req.params.promoId);
     })
-    
+
     //  put implementation
-    .put((req, res, next) => {
-        res.end('Will update promotion: ' + req.params.promoId +  
-        ' with new name: ' + req.body.name + ' and description: ' + req.body.description);
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promos.findByIdAndUpdate(req.params.promoId, {
+            $set: req.body
+        }, {new: true})
+        .then(promo => res.json(promo))
+        .catch(err => console.log(err));
     })
-    
-    //  delete implementation
-    .delete((req, res, next) => {
-        res.end('Will delete promotion ' + req.params.promoId + '!');
+
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promos.findByIdAndRemove(req.params.promoId)
+        .then(resp => res.json(resp))
+        .catch(err => console.log(err));
     });
 
 //  export router
