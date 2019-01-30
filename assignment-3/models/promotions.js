@@ -29,7 +29,7 @@ const promotionSchema = new Schema({
     },
     featured: {
         type: Boolean,
-        required: true
+        default: false
     }
 }, { timestamps: true });
 
