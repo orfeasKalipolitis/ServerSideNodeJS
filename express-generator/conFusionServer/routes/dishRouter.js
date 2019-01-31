@@ -2,8 +2,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+//  import custom modules
 var authenticate = require('../authenticate');
 
+//  import models
 const Dishes = require('../models/dishes');
 
 //  initialize router
@@ -31,7 +33,7 @@ dishRouter.route('/')
     })
 
     //  post implementation
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(authenticate.verifyUser,  authenticate.verifyAdmin, (req, res, next) => {
         Dishes.create(req.body)
         .then(resp => res.json(resp))
         .catch(err => {
@@ -42,12 +44,12 @@ dishRouter.route('/')
     })
 
     //  put implementation
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not permitted on /dishes/');
     })
 
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.remove({})
         .then(resp => res.json(resp))
         .catch(err => console.log(err));
@@ -71,12 +73,12 @@ dishRouter.route('/:dishId')
     })
 
     //  post implementation
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         res.end('POST not supported on /dishes/' + req.params.dishId);
     })
 
     //  put implementation
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.findByIdAndUpdate(req.params.dishId, {
             $set: req.body
         }, {new: true})
@@ -84,7 +86,7 @@ dishRouter.route('/:dishId')
         .catch(err => console.log(err));
     })
 
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.findByIdAndRemove(req.params.dishId)
         .then(resp => res.json(resp))
         .catch(err => console.log(err));
@@ -139,7 +141,7 @@ dishRouter.route('/:dishId/comments')
     res.end('PUT operation not supported on /dishes/'
         + req.params.dishId + '/comments');
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null) {
@@ -194,7 +196,8 @@ dishRouter.route('/:dishId/comments/:commentId')
 .put(authenticate.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
-        if (dish != null && dish.comments.id(req.params.commentId) != null) {
+        let sameUser = dish.comments.id(req.params.commentId).author.equals(req.user._id);
+        if (dish != null && dish.comments.id(req.params.commentId) != null && sameUser) {
             if (req.body.rating) {
                 dish.comments.id(req.params.commentId).rating = req.body.rating;
             }
@@ -217,10 +220,15 @@ dishRouter.route('/:dishId/comments/:commentId')
             err.status = 404;
             return next(err);
         }
-        else {
+        else if (dish.comments.id(req.params.commentId) == null){
             err = new Error('Comment ' + req.params.commentId + ' not found');
             err.status = 404;
             return next(err);            
+        }
+        else {
+            err = new Error('This comment was initially made by another user!');
+            err.status = 404;
+            return next(err);
         }
     }, (err) => next(err))
     .catch((err) => next(err));
@@ -228,8 +236,8 @@ dishRouter.route('/:dishId/comments/:commentId')
 .delete(authenticate.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
-        if (dish != null && dish.comments.id(req.params.commentId) != null) {
-
+        let sameUser = dish.comments.id(req.params.commentId).author.equals(req.user._id);
+        if (dish != null && dish.comments.id(req.params.commentId) != null && sameUser) {
             dish.comments.id(req.params.commentId).remove();
             dish.save()
             .then((dish) => {
@@ -247,10 +255,15 @@ dishRouter.route('/:dishId/comments/:commentId')
             err.status = 404;
             return next(err);
         }
-        else {
+        else if (dish.comments.id(req.params.commentId) == null){
             err = new Error('Comment ' + req.params.commentId + ' not found');
             err.status = 404;
             return next(err);            
+        } 
+        else {
+            err = new Error('This comment was initially made by another user!');
+            err.status = 404;
+            return next(err);
         }
     }, (err) => next(err))
     .catch((err) => next(err));

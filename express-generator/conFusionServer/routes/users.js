@@ -1,12 +1,31 @@
+//  Import modules
 var express = require('express');
 var router = express.Router();
 const bodyParser = require('body-parser');
-var User = require('../models/user');
 var passport = require('passport');
 
+//  Import custom modules
 var authenticate = require('../authenticate');
 
+//  Import models
+var User = require('../models/user');
+
 router.use(bodyParser.json());
+
+router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+  User.find({})
+  .then(users => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.json(users);
+  })
+  .catch(err => {
+    console.log(err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.json({err: err});
+  })
+});
 
 router.post('/signup', (req, res, next) => {
   User.register(new User({username: req.body.username}), 
